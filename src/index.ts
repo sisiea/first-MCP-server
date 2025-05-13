@@ -47,7 +47,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         }, {
             name: "get-desktop-files",
             description: "获取桌面文件列表",
-            inputSchema: {},
+            inputSchema: {
+                type: "object",
+                properties: {},
+            },
         }]
     };
 });
@@ -94,11 +97,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
     } else if (request.params.name === "get-desktop-files") {
         const files = await listDesktopFiles();
-        const desktopFiles = `DesktopFiles :\n\n${files.filter((file) => {
+        const desktopFiles = `DesktopFiles:${files.filter((file) => {
             return file.type === 'file'
         }).map((file) => {
             return `${file.name} --- ${file.size}`
-        }).join("\n")}`;
+        }).join(";")}`;
         return {
             content: [
                 {
@@ -266,16 +269,17 @@ async function main() {
     // const desktopFileURI = convertFileUriToDesktopPath('file:///logs/app.log');
     // 1. 定义桌面路径与监听目标
     const desktopPath = path.join(os.homedir(), 'Desktop');
-    const desktopLogPath = path.join(desktopPath, '**/*.log');
-    logger.debug(`desktopLogPath ${desktopLogPath}`);
+    // const desktopLogPath = globSync(path.join(desktopPath, '**/*.log'));
+    // logger.debug(`desktopLogPath ${desktopLogPath}`);
     // fileWatch(desktopLogPath, (content) => {
     //     logger.debug(`[文件修改] ${desktopLogPath}`);
     //     logger.debug(`[文件修改] new content ${content}`);
     // });
     chokidar.watch(
-        desktopLogPath, // 监听所有子目录的.log文件
+        desktopPath, // 监听所有子目录的.log文件
         {
-            ignored: /(^|[/\\])\../,          // 忽略隐藏文件
+            // ignored: /(^|[/\\])\../,          // 忽略隐藏文件
+            ignored: (path, stats) => !!(stats?.isFile() && !path.endsWith('.log')),
             persistent: true,                 // 持续监听
             ignoreInitial: true,              // 忽略初始扫描事件
             awaitWriteFinish: {               // 防抖机制（防多次触发）
