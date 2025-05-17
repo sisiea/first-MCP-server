@@ -26,11 +26,14 @@ const server = new Server({
         },
         logging: {
 
+        },
+        prompts: {
+            listChanged: true,
         }
     }
 });
 
-const logger = new Logger(server);
+const logger = new Logger(server, true);
 
 server.setRequestHandler(ListToolsRequestSchema, async () => {
     return {
@@ -289,6 +292,7 @@ async function main() {
         }
     ).on('add', (filePath: string) => {
         logger.debug(`[新增文件] ${filePath}`);
+        logger.info(`[新增文件] ${filePath}`);
         // 扩展：读取文件内容
         // const content = fs.readFileSync(filePath, 'utf-8');
         server.sendResourceListChanged();
